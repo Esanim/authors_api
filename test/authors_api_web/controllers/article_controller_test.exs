@@ -1,100 +1,128 @@
 defmodule AuthorsApiWeb.ArticleControllerTest do
   use AuthorsApiWeb.ConnCase
 
-  alias AuthorsApi.Content
+  # alias AuthorsApi.Content
   alias AuthorsApi.Content.Article
+  alias AuthorsApi.{Repo, Author, Session}
 
-  @create_attrs %{
+  @create_attrs_1 %{
     body: "some body",
     description: "some description",
     published_date: "2010-04-17T14:00:00Z",
     title: "some title"
   }
-  @update_attrs %{
-    body: "some updated body",
-    description: "some updated description",
-    published_date: "2011-05-18T15:01:01Z",
-    title: "some updated title"
-  }
-  @invalid_attrs %{body: nil, description: nil, published_date: nil, title: nil}
 
-  def fixture(:article) do
-    {:ok, article} = Content.create_article(@create_attrs)
-    article
-  end
+  @create_attrs_2 %{
+    body: "another body",
+    description: "another description",
+    published_date: "2010-04-17T14:00:00Z",
+    title: "another title"
+  }
+
+  @author1_valid_attrs %{first_name: "James", last_name: "Bagzynski", age: 18, owner_id: 1}
+  @author2_valid_attrs %{first_name: "Amanda", last_name: "Hollow", age: 22, owner_id: 2}
 
   setup %{conn: conn} do
-    {:ok, conn: put_req_header(conn, "accept", "application/json")}
+    author = create_author(@author1_valid_attrs)
+    session = create_session(author)
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Token token=\"#{session.token}\"")
+
+    {:ok, conn: conn, current_author: author}
   end
 
-  describe "index" do
-    test "lists all articles", %{conn: conn} do
-      conn = get(conn, Routes.article_path(conn, :index))
-      assert json_response(conn, 200)["data"] == []
+  def create_author(author_params) do
+    Author.changeset(%Author{}, author_params) |> Repo.insert!()
+  end
+
+  def create_session(author) do
+    Session.registration_changeset(%Session{author_id: author.id}, %{}) |> Repo.insert!()
+  end
+
+  def create_article(%{description: _description, owner_id: owner_id} = options) do
+    Article.changeset(%Article{owner_id: owner_id}, options) |> Repo.insert!()
+  end
+
+  test "lists all entries on index", %{conn: conn, current_author: current_author} do
+    create_article(Map.merge(@create_attrs_1, %{owner_id: current_author.id}))
+
+    another_author = create_author(@author2_valid_attrs)
+    create_article(Map.merge(@create_attrs_2, %{owner_id: another_author.id}))
+
+    conn = get(conn, Routes.article_path(conn, :index))
+
+    assert Enum.count(json_response(conn, 200)["data"]) == 1
+    assert %{"description" => "some description"} = hd(json_response(conn, 200)["data"])
+  end
+
+  test "creates and renders resource when data is valid", %{
+    conn: conn,
+    current_author: current_author
+  } do
+    conn = post(conn, Routes.article_path(conn, :create), article: @create_attrs_1)
+    assert json_response(conn, 201)["data"]["id"]
+    article = Repo.get_by(Article, @create_attrs_1)
+    assert article
+    assert article.owner_id == current_author.id
+  end
+
+  test "ignores parameter owner_id and always assigns current_author as entry's owner", %{
+    conn: conn,
+    current_author: current_author
+  } do
+    other_author = create_author(@author2_valid_attrs)
+    malicious_attrs = Map.merge(@create_attrs_1, %{owner_id: other_author.id})
+    conn = post conn, Routes.article_path(conn, :create), article: malicious_attrs
+    assert json_response(conn, 201)["data"]["id"]
+    article = Repo.get_by(Article, @create_attrs_1)
+    assert article
+    assert article.owner_id == current_author.id
+  end
+
+  test "deletes chosen article", %{conn: conn} do
+    conn = post(conn, Routes.article_path(conn, :create), article: @create_attrs_1)
+    assert json_response(conn, 201)["data"]["id"]
+    article = Repo.get_by(Article, @create_attrs_1)
+    conn = delete(conn, Routes.article_path(conn, :delete, article))
+    assert response(conn, 204)
+
+    assert_error_sent 404, fn ->
+      get(conn, Routes.article_path(conn, :show, article))
     end
   end
 
-  describe "create article" do
-    test "renders article when data is valid", %{conn: conn} do
-      conn = post(conn, Routes.article_path(conn, :create), article: @create_attrs)
-      assert %{"id" => id} = json_response(conn, 201)["data"]
+  # describe "index" do
+  #   test "lists all articles", %{conn: conn} do
+  #     conn = get(conn, Routes.article_path(conn, :index))
+  #     assert json_response(conn, 200)["data"] == []
+  #   end
+  # end
 
-      conn = get(conn, Routes.article_path(conn, :show, id))
+  # describe "update article" do
+  #   setup [:create_article]
 
-      assert %{
-               "id" => id,
-               "body" => "some body",
-               "description" => "some description",
-               "published_date" => "2010-04-17T14:00:00Z",
-               "title" => "some title"
-             } = json_response(conn, 200)["data"]
-    end
+  #   test "renders article when data is valid", %{conn: conn, article: %Article{id: id} = article} do
+  #     conn = put(conn, Routes.article_path(conn, :update, article), article: @update_attrs)
+  #     assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
-    test "renders errors when data is invalid", %{conn: conn} do
-      conn = post(conn, Routes.article_path(conn, :create), article: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
+  #     conn = get(conn, Routes.article_path(conn, :show, id))
 
-  describe "update article" do
-    setup [:create_article]
+  #     assert %{
+  #              "id" => id,
+  #              "body" => "some updated body",
+  #              "description" => "some updated description",
+  #              "published_date" => "2011-05-18T15:01:01Z",
+  #              "title" => "some updated title"
+  #            } = json_response(conn, 200)["data"]
+  #   end
 
-    test "renders article when data is valid", %{conn: conn, article: %Article{id: id} = article} do
-      conn = put(conn, Routes.article_path(conn, :update, article), article: @update_attrs)
-      assert %{"id" => ^id} = json_response(conn, 200)["data"]
+  #   test "renders errors when data is invalid", %{conn: conn, article: article} do
+  #     conn = put(conn, Routes.article_path(conn, :update, article), article: @invalid_attrs)
+  #     assert json_response(conn, 422)["errors"] != %{}
+  #   end
+  # end
 
-      conn = get(conn, Routes.article_path(conn, :show, id))
-
-      assert %{
-               "id" => id,
-               "body" => "some updated body",
-               "description" => "some updated description",
-               "published_date" => "2011-05-18T15:01:01Z",
-               "title" => "some updated title"
-             } = json_response(conn, 200)["data"]
-    end
-
-    test "renders errors when data is invalid", %{conn: conn, article: article} do
-      conn = put(conn, Routes.article_path(conn, :update, article), article: @invalid_attrs)
-      assert json_response(conn, 422)["errors"] != %{}
-    end
-  end
-
-  describe "delete article" do
-    setup [:create_article]
-
-    test "deletes chosen article", %{conn: conn, article: article} do
-      conn = delete(conn, Routes.article_path(conn, :delete, article))
-      assert response(conn, 204)
-
-      assert_error_sent 404, fn ->
-        get(conn, Routes.article_path(conn, :show, article))
-      end
-    end
-  end
-
-  defp create_article(_) do
-    article = fixture(:article)
-    {:ok, article: article}
-  end
 end

@@ -6,8 +6,6 @@ defmodule AuthorsApiWeb.AuthorController do
 
   action_fallback AuthorsApiWeb.FallbackController
 
-  # plug :scrub_params, "author" when action in [:create]
-
   def create(conn, %{"author" => author_params}) do
     changeset = Author.changeset(%Author{}, author_params)
 
@@ -17,4 +15,14 @@ defmodule AuthorsApiWeb.AuthorController do
       |> render("show.json", author: author)
     end
   end
+
+  def update(conn, %{"id" => id, "author" => author_params}) do
+    author = Repo.get!(Author, id)
+    changeset = Author.changeset(author, author_params)
+
+    with {:ok, %Author{} = author} <- Repo.update(changeset) do
+      render(conn, "show.json", author: author)
+    end
+  end
+
 end

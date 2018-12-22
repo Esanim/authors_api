@@ -23,7 +23,8 @@ defmodule AuthorsApiWeb.Router do
   scope "/api", AuthorsApiWeb do
     pipe_through :api
 
-    resources "/articles", ArticleController, except: [:new, :edit]
-    resources "/authors", AuthorController, only: [:create]
+    resources "/articles", ArticleController, except: [:new]
+    resources "/authors", AuthorController, only: [:create, :update]
+    resources "/sessions", SessionController, only: [:create]
   end
 end

@@ -44,6 +44,7 @@ defmodule AuthorsApi.MixProject do
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
       {:cors_plug, "~> 1.5"},
+      {:secure_random, "~> 0.5.1"},
     ]
   end
 

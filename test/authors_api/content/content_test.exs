@@ -41,20 +41,20 @@ defmodule AuthorsApi.ContentTest do
       assert {:error, %Ecto.Changeset{}} = Content.create_article(@invalid_attrs)
     end
 
-    test "update_article/2 with valid data updates the article" do
-      article = article_fixture()
-      assert {:ok, %Article{} = article} = Content.update_article(article, @update_attrs)
-      assert article.body == "some updated body"
-      assert article.description == "some updated description"
-      assert article.published_date == DateTime.from_naive!(~N[2011-05-18T15:01:01Z], "Etc/UTC")
-      assert article.title == "some updated title"
-    end
+    # test "update_article/2 with valid data updates the article" do
+    #   article = article_fixture()
+    #   assert {:ok, %Article{} = article} = Content.update_article(article, @update_attrs)
+    #   assert article.body == "some updated body"
+    #   assert article.description == "some updated description"
+    #   assert article.published_date == DateTime.from_naive!(~N[2011-05-18T15:01:01Z], "Etc/UTC")
+    #   assert article.title == "some updated title"
+    # end
 
-    test "update_article/2 with invalid data returns error changeset" do
-      article = article_fixture()
-      assert {:error, %Ecto.Changeset{}} = Content.update_article(article, @invalid_attrs)
-      assert article == Content.get_article!(article.id)
-    end
+    # test "update_article/2 with invalid data returns error changeset" do
+    #   article = article_fixture()
+    #   assert {:error, %Ecto.Changeset{}} = Content.update_article(article, @invalid_attrs)
+    #   assert article == Content.get_article!(article.id)
+    # end
 
     test "delete_article/1 deletes the article" do
       article = article_fixture()

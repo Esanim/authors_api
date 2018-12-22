@@ -8,6 +8,7 @@ defmodule AuthorsApi.Content.Article do
     field :description, :string
     field :published_date, :utc_datetime
     field :title, :string
+    belongs_to :author, AuthorsApi.Author, foreign_key: :owner_id
 
     timestamps()
   end

@@ -67,11 +67,12 @@ defmodule AuthorsApi.Content do
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_article(%Article{} = article, attrs) do
-    article
-    |> Article.changeset(attrs)
-    |> Repo.update()
-  end
+
+  # def update_article(%Article{} = article, attrs) do
+  #   article
+  #   |> Article.changeset(attrs)
+  #   |> Repo.update()
+  # end
 
   @doc """
   Deletes a Article.
