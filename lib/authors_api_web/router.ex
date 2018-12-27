@@ -13,18 +13,28 @@ defmodule AuthorsApiWeb.Router do
     plug :accepts, ["json"]
   end
 
+  pipeline :api_auth do
+    plug :accepts, ["json"]
+    plug AuthorsApiWeb.Authentication
+  end
+
   scope "/", AuthorsApiWeb do
     pipe_through :browser
 
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
   scope "/api", AuthorsApiWeb do
     pipe_through :api
 
-    resources "/articles", ArticleController, except: [:new]
-    resources "/authors", AuthorController, only: [:create, :update]
+    resources "/authors", AuthorController, only: [:create]
     resources "/sessions", SessionController, only: [:create]
+  end
+
+  scope "/api", AuthorsApiWeb do
+    pipe_through :api_auth
+
+    resources "/articles", ArticleController, except: [:new, :update]
+    resources "/authors", AuthorController, expect: [:create, :delete]
   end
 end

@@ -6,9 +6,13 @@ defmodule AuthorsApiWeb.AuthorController do
 
   action_fallback AuthorsApiWeb.FallbackController
 
+  def index(conn, _params) do
+    authors = Repo.all(Author)
+    render(conn, "show.json", authors: authors)
+  end
+
   def create(conn, %{"author" => author_params}) do
     changeset = Author.changeset(%Author{}, author_params)
-
     with {:ok, %Author{} = author} <- Repo.insert(changeset) do
       conn
       |> put_status(:created)
@@ -21,7 +25,8 @@ defmodule AuthorsApiWeb.AuthorController do
     changeset = Author.changeset(author, author_params)
 
     with {:ok, %Author{} = author} <- Repo.update(changeset) do
-      render(conn, "show.json", author: author)
+      conn
+      |> render("show.json", author: author)
     end
   end
 

@@ -29,7 +29,6 @@ defmodule AuthorsApi.AuthorTest do
     changeset = Author.changeset(
       %Author{}, Map.put(@valid_attrs, :age, 0)
     )
-    # refute changeset.valid?
     assert {:error, %Ecto.Changeset{}} = Repo.insert(changeset)
   end
 

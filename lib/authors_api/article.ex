@@ -1,7 +1,6 @@
-defmodule AuthorsApi.Content.Article do
+defmodule AuthorsApi.Article do
   use Ecto.Schema
   import Ecto.Changeset
-
 
   schema "articles" do
     field :body, :string
@@ -18,5 +17,6 @@ defmodule AuthorsApi.Content.Article do
     article
     |> cast(attrs, [:title, :description, :body, :published_date])
     |> validate_required([:title, :description, :body, :published_date])
+    |> validate_length(:body, max: 150)
   end
 end

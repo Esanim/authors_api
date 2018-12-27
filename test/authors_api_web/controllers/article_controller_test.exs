@@ -1,8 +1,7 @@
 defmodule AuthorsApiWeb.ArticleControllerTest do
   use AuthorsApiWeb.ConnCase
 
-  # alias AuthorsApi.Content
-  alias AuthorsApi.Content.Article
+  alias AuthorsApi.Article
   alias AuthorsApi.{Repo, Author, Session}
 
   @create_attrs_1 %{
@@ -93,36 +92,5 @@ defmodule AuthorsApiWeb.ArticleControllerTest do
       get(conn, Routes.article_path(conn, :show, article))
     end
   end
-
-  # describe "index" do
-  #   test "lists all articles", %{conn: conn} do
-  #     conn = get(conn, Routes.article_path(conn, :index))
-  #     assert json_response(conn, 200)["data"] == []
-  #   end
-  # end
-
-  # describe "update article" do
-  #   setup [:create_article]
-
-  #   test "renders article when data is valid", %{conn: conn, article: %Article{id: id} = article} do
-  #     conn = put(conn, Routes.article_path(conn, :update, article), article: @update_attrs)
-  #     assert %{"id" => ^id} = json_response(conn, 200)["data"]
-
-  #     conn = get(conn, Routes.article_path(conn, :show, id))
-
-  #     assert %{
-  #              "id" => id,
-  #              "body" => "some updated body",
-  #              "description" => "some updated description",
-  #              "published_date" => "2011-05-18T15:01:01Z",
-  #              "title" => "some updated title"
-  #            } = json_response(conn, 200)["data"]
-  #   end
-
-  #   test "renders errors when data is invalid", %{conn: conn, article: article} do
-  #     conn = put(conn, Routes.article_path(conn, :update, article), article: @invalid_attrs)
-  #     assert json_response(conn, 422)["errors"] != %{}
-  #   end
-  # end
 
 end
